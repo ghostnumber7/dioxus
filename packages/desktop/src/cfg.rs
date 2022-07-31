@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use wry::application::window::Icon;
 use wry::{
     application::{
-        event_loop::EventLoop,
+        event::Event,
         window::{Window, WindowBuilder},
     },
     http::{Request as HttpRequest, Response as HttpResponse},
@@ -11,7 +11,7 @@ use wry::{
     Result as WryResult,
 };
 
-pub(crate) type DynEventHandlerFn = dyn Fn(&mut EventLoop<()>, &mut WebView);
+pub(crate) type DynEventHandlerFn = dyn Fn(&mut Event<()>, &WebView);
 
 pub struct DesktopConfig {
     pub(crate) window: WindowBuilder,
@@ -82,7 +82,7 @@ impl DesktopConfig {
 
     pub fn with_event_handler(
         &mut self,
-        handler: impl Fn(&mut EventLoop<()>, &mut WebView) + 'static,
+        handler: impl Fn(&mut Event<()>, &WebView) + 'static,
     ) -> &mut Self {
         self.event_handler = Some(Box::new(handler));
         self

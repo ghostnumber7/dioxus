@@ -112,10 +112,12 @@ pub fn launch_with_props<P: 'static + Send>(
     let mut desktop = DesktopController::new_on_tokio(root, props, event_loop.create_proxy());
     let proxy = event_loop.create_proxy();
 
+    let event_handler = cfg.event_handler.take();
+
     event_loop.run(move |window_event, event_loop, control_flow| {
         *control_flow = ControlFlow::Wait;
 
-        match window_event {
+        match &window_event {
             Event::NewEvents(StartCause::Init) => {
                 let builder = cfg.window.clone();
 
@@ -212,7 +214,7 @@ pub fn launch_with_props<P: 'static + Send>(
                 event, window_id, ..
             } => match event {
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::Destroyed { .. } => desktop.close_window(window_id, control_flow),
+                WindowEvent::Destroyed { .. } => desktop.close_window(*window_id, control_flow),
                 _ => {}
             },
 
@@ -225,6 +227,13 @@ pub fn launch_with_props<P: 'static + Send>(
             Event::LoopDestroyed => {}
             Event::RedrawRequested(_id) => {}
             _ => {}
+        };
+
+        if let Some(handler) = &event_handler {
+            if let Ok(mut event) = window_event.map_nonuser_event::<()>() {
+                let webview = desktop.webviews.values().next().unwrap();
+                handler(&mut event, webview);
+            }
         }
     })
 }

@@ -136,7 +136,7 @@ impl DesktopContext {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UserWindowEvent {
     Update,
 
@@ -167,7 +167,7 @@ pub enum UserWindowEvent {
 }
 
 pub(super) fn handler(
-    user_event: UserWindowEvent,
+    user_event: &UserWindowEvent,
     desktop: &mut DesktopController,
     control_flow: &mut ControlFlow,
 ) {
@@ -183,9 +183,9 @@ pub(super) fn handler(
             // if the drag_window has any errors, we don't do anything
             window.fullscreen().is_none().then(|| window.drag_window());
         }
-        Visible(state) => window.set_visible(state),
-        Minimize(state) => window.set_minimized(state),
-        Maximize(state) => window.set_maximized(state),
+        Visible(state) => window.set_visible(*state),
+        Minimize(state) => window.set_minimized(*state),
+        Maximize(state) => window.set_maximized(*state),
         MaximizeToggle => window.set_maximized(!window.is_maximized()),
         Fullscreen(state) => {
             if let Some(handle) = window.current_monitor() {
@@ -193,18 +193,18 @@ pub(super) fn handler(
             }
         }
         FocusWindow => window.set_focus(),
-        Resizable(state) => window.set_resizable(state),
-        AlwaysOnTop(state) => window.set_always_on_top(state),
+        Resizable(state) => window.set_resizable(*state),
+        AlwaysOnTop(state) => window.set_always_on_top(*state),
 
-        CursorVisible(state) => window.set_cursor_visible(state),
+        CursorVisible(state) => window.set_cursor_visible(*state),
         CursorGrab(state) => {
-            let _ = window.set_cursor_grab(state);
+            let _ = window.set_cursor_grab(*state);
         }
 
         SetTitle(content) => window.set_title(&content),
-        SetDecorations(state) => window.set_decorations(state),
+        SetDecorations(state) => window.set_decorations(*state),
 
-        SetZoomLevel(scale_factor) => webview.zoom(scale_factor),
+        SetZoomLevel(scale_factor) => webview.zoom(*scale_factor),
 
         Print => {
             if let Err(e) = webview.print() {
